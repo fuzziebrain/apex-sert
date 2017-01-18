@@ -77,6 +77,19 @@ define scheduling_grant_s          = 'ins/scheduling_grant.sql'
 define parse_as_grants_s           = 'ins/parse_as_grants.sql'
 define app_id_assign_script         ='app/id_prompts.sql'       -- Script to assign APP_ID
 
+-- XE Overrides
+column p1 new_value 1 noprint
+
+select null p1 from dual where 1 = 2;
+select nvl('^1', 'NOXE') p1 from dual;
+
+begin
+  if '^1' = 'FORCEXE' then
+    dbms_output.put_line('Forcing installation on unsupported platform!');
+  end if;
+end;
+/
+
 PROMPT  ... Testing for prerequisites
 --  =================
 --  =================  PREREQUISITE TESTS
@@ -109,7 +122,7 @@ begin
       'select to_number(replace(version,''.'',null)) from registry$ where cid=''CATPROC'''
     into l_version;
 
-    if l_version < 110204 then
+    if '^1' != 'FORCEXE' and l_version < 110204 then
         dbms_output.put_line('APEX-SERT installation requires database version 11.2.0.4 or later.');
         execute immediate 'bogus statement to force exit';
     end if;
@@ -132,12 +145,14 @@ begin
         end;
 
 
-    if l_edition = 'XE' then
+    if '^1' != 'FORCEXE' and l_edition = 'XE' then
         dbms_output.put_line('APEX-SERT will not run on the XE edition of Oracle.');
         execute immediate 'bogus statement to force exit';
     end if;
 end;
 /
+
+undef 1
 
 --  =================
 --  =================  Check for APEX 5.0.0 or above
